@@ -81,7 +81,7 @@ while running:
 
         if item.type == "potion":
             player.heal(item.prop)
-            print(bcolors.OKGREEN+ "\n" + ite.name + " heals for", str(item.prop), "HP" + bcolors.ENDC)
+            print(bcolors.OKGREEN+ "\n" + item.name + " heals for", str(item.prop), "HP" + bcolors.ENDC)
         enemy.take_damage(magic_dmg)
         print(bcolors.OKBLUE + "\n" + spell.name + " deals", str(magic_dmg), "points of damage" + bcolors.ENDC)
 
