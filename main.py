@@ -2,6 +2,15 @@ from classes.game import Person, bcolors
 from classes.magic import Spell
 from classes.inventory import Item
 
+print ("\n\n")
+print("NAME                HP                                  MP")
+print("                    _________________________           __________")
+print(bcolors.BOLD + "Valos:   460/460   |" + bcolors.OKGREEN + "=========================" + bcolors.ENDC + "|   65/65 |" + bcolors.OKBLUE + bcolors.BOLD + "==========" + bcolors.ENDC + "|")
+
+
+
+print("\n\n")
+
 
 # Create black magic
 fire = Spell("Fire", 10, 100, "black")
@@ -80,7 +89,16 @@ while running:
         if item_choice == -1:
             continue
 
-        item = player.items[item_choice]
+        item = player.items[item_choice]["item"]
+
+        if player.items[item_choice]["quantity"] == 0:
+            print(bcolors.FAIL + "\n" + "None left..." + bcolors.ENDC)
+            continue
+
+        player.items[item_choice]["quantity"] -= 1
+
+
+
 
         if item.type == "potion":
             player.heal(item.prop)
@@ -88,7 +106,7 @@ while running:
         elif item.type == "elixer":
             player.hp = player.maxhp
             player.mp = player.maxmp
-            print(bcolors.OKGREEN + "\n" + item.name + " fully/MP" + bcolors.ENDC)
+            print(bcolors.OKGREEN + "\n" + item.name + " fully restores HP & MP" + bcolors.ENDC)
         elif item.type == "attack":
             enemy.take_damage(item.prop)
             print(bcolors.FAIL + "\n" + item.name + " deals", str(item.prop), "points of damage" + bcolors.ENDC)
