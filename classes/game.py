@@ -1,4 +1,5 @@
 import random
+import math
 from classes.magic import Spell
 
 
@@ -14,7 +15,7 @@ class bcolors:
 
 
 class Person:
-    def __init__(self, hp, mp, atk, df, magic, items):
+    def __init__(self, name, hp, mp, atk, df, magic, items):
         self.maxhp = hp
         self.hp = hp
         self.maxmp = mp
@@ -25,6 +26,7 @@ class Person:
         self.magic = magic
         self.items = items
         self.actions = ["Attack","Magic", "Items"]
+        self.name = name
 
     def generate_damage(self):
         return random.randrange(self.atkl, self.atkh)
@@ -57,8 +59,10 @@ class Person:
 
 
 
+
     def choose_action(self):
-        print ("Actions")
+        print ("\n" + "    " + bcolors.BOLD + self.name + bcolors.ENDC)
+        print((bcolors.OKBLUE + bcolors.BOLD + "    ACTIONS:" + bcolors.ENDC))
         i = 1
         for item in self.actions:
             print ("    " + str(i), ":", item)
@@ -66,14 +70,42 @@ class Person:
 
     def choose_magic(self):
         i = 1
-        print("\n" + "Magic")
+        print((bcolors.OKBLUE + bcolors.BOLD + "    MAGIC:" + bcolors.ENDC))
         for spell in self.magic:
             print("    " + str(i), ":", spell.name, "(cost:", str(spell.cost) + ")")
             i+=1
 
     def choose_item(self):
         i = 1
-        print("\n" + bcolors.OKGREEN + bcolors.BOLD + "Items:" + bcolors.ENDC)
+        print("\n" + bcolors.OKGREEN + bcolors.BOLD + "ITEMS:" + bcolors.ENDC)
         for item in self.items:
-            print("    " + str(i) + ".", item["item"].name, ":", item["item"].description, ": (x" + str(item["quantity"]) + ")")
+            print("    " + str(i) + ".", item["item"].name, ":",
+                  item["item"].description, ": (x" + str(item["quantity"]) + ")")
             i+=1
+
+    def get_stats(self):
+        hp_pct = (self.hp / self.maxhp) #HP Percentage
+        mp_pct = (self.mp / self.maxmp) #MP Percentage
+        hp_bar = math.ceil(25 * hp_pct) #Bar percentage, rounded up
+        mp_bar = math.ceil(10 * mp_pct) #Bar percentage, rounded up
+        hp_bar_white = 25 - hp_bar
+        mp_bar_white = 10 - mp_bar
+
+        hp_render = '  |'
+        hp_render += '=' * hp_bar
+        hp_render += ' ' * hp_bar_white
+        hp_render += '|  '
+
+        mp_render = '  |'
+        mp_render += '=' * mp_bar
+        mp_render += ' ' * mp_bar_white
+        mp_render += '|'
+
+        hp_num = str(self.hp) + "/" + str(self.maxhp)
+        hp_gap = " " * (11 - len(hp_num))
+
+        mp_num = str(self.mp) + "/" + str(self.maxmp)
+        mp_gap = " " * (7 - len(mp_num))
+
+        print("                     _________________________             __________")
+        print(bcolors.BOLD + self.name + hp_gap + hp_num + bcolors.OKGREEN + hp_render + bcolors.ENDC + bcolors.BOLD + mp_gap + mp_num + bcolors.OKBLUE + mp_render + bcolors.ENDC)
