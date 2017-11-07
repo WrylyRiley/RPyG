@@ -47,86 +47,93 @@ enemies = [enemy1, enemy2]
 
 # Create action functions
 # Attack
-def attack(player, target, is_enemy):
+def attack(player_atk, is_enemy):
     print("You chose: Attack")
-    dmg = player.generate_damage()
-    if is_enemy is True:
-        players[target].take_damage(dmg)
+    dmg = player_atk.generate_damage()
+    if is_enemy:
+        players[random.randrange(0, len(players) - 1)].take_damage(dmg)
     else:
-        enemies[target].take_damage(dmg)
-    print(player.name + " attacked for", dmg, "points of damage.")
+        enemies[choose_enemy()].take_damage(dmg)
+    print(player_atk.name + " attacked for", dmg, "points of damage.")
 
     return True
 
 
 # Magic
-def magic(player, target, is_enemy):
-    magic_choice = 0
-
-    if is_enemy is False:
-        player.choose_magic()
-        magic_choice = int(input("Choose magic:")) - 1
-
-        if magic_choice is -1:
-            return False
+def magic(player_mag, is_enemy):
+    if is_enemy:
+        magic_choice = random.randrange(0, len(player_mag.magic) - 1)
     else:
-        magic_choice = random.randrange(0, player.magic.length - 1)
+        player_mag.choose_magic()
+        while True:
 
-    print("You chose: Magic")
+            magic_choice = int(input("Choose magic:")) - 1
 
-    spell = player.magic[magic_choice]
+            if magic_choice is -1:
+                return False
+
+            if magic_choice < -1 or magic_choice > len(player_mag.magic) - 1:
+                print(bcolors.BOLD + bcolors.FAIL + "Invalid entry, try again!" + bcolors.ENDC)
+                continue
+
+            break
+
+    spell = player_mag.magic[magic_choice]
     magic_dmg = spell.generate_damage()
 
-    current_mp = player.get_mp()
+    current_mp = player_mag.get_mp()
     if spell.cost > current_mp:
         print(bcolors.FAIL + "\nNot enough MP\n" + bcolors.ENDC)
         return False
 
-    player.reduce_mp(spell.cost)
+    player_mag.reduce_mp(spell.cost)
 
     if spell.type is "white":
-        player.heal(magic_dmg)
+        player_mag.heal(magic_dmg)
         print(bcolors.OKBLUE + "\n" + spell.name + " heals for", str(magic_dmg), "HP." + bcolors.ENDC)
     elif spell.type is "black":
-        if is_enemy is True:
-            players[target].take_damage(magic_dmg)
+        if is_enemy:
+            players[random.randrange(0, len(players) - 1)].take_damage(magic_dmg)
         else:
-            enemies[target].take_damage(magic_dmg)
+            enemies[choose_enemy()].take_damage(magic_dmg)
         print(bcolors.OKBLUE + "\n" + spell.name + " deals", str(magic_dmg), "points of damage" + bcolors.ENDC)
 
     return True
 
 
 # Items
-def items(player):
-    player.choose_item()
+def items(player_it, is_enemy):
+    player_it.choose_item()
     item_choice = int(input("Choose Item: ")) - 1
 
     if item_choice is -1:
         return False
 
-    item = player.items[item_choice]["item"]
+    item = player_it.items[item_choice]["item"]
 
-    if player.items[item_choice]["quantity"] is 0:
+    if player_it.items[item_choice]["quantity"] is 0:
         print(bcolors.FAIL + "\n" + "None left..." + bcolors.ENDC)
         return False
 
-    player.items[item_choice]["quantity"] -= 1
+    player_it.items[item_choice]["quantity"] -= 1
 
     if item.type is "potion":
-        player.heal(item.prop)
+        player_it.heal(item.prop)
         print(bcolors.OKGREEN + "\n" + item.name + " heals for", str(item.prop), "HP" + bcolors.ENDC)
     elif item.type is "elixer":
         if item.name is 'megaelixer':
             for player_all in players:
                 player_all.hp = player_all.maxhp
                 player_all.mp = player_all.maxmp
-        player.hp = player.maxhp
-        player.mp = player.maxmp
+        player_it.hp = player.maxhp
+        player_it.mp = player.maxmp
         print(bcolors.OKGREEN + "\n" + item.name + " fully restores HP & MP" + bcolors.ENDC)
 
     elif item.type is "attack":
-        enemies[target].take_damage(item.prop)
+        if is_enemy:
+            players[random.randrange(0, len(players) - 1)].take_damage(item.prop)
+        else:
+            enemies[choose_enemy()].take_damage(item.prop)
         print(bcolors.FAIL + "\n" + item.name + " deals", str(item.prop), "points of damage" + bcolors.ENDC)
 
     return True
@@ -134,21 +141,32 @@ def items(player):
 
 def choose_enemy():
     i = 1
-    for enemy in enemies:
-        if enemy.hp > 0:
-            print(str(i) + " : " + enemy.name)
+    for x in enemies:
+        if x.hp > 0:
+            print(str(i) + " : " + x.name)
             i += 1
 
+    while True:
+            try:
+                choice = int(input("Choose an Enemy")) - 1
+                if choice < 0 or choice > i:
+                    print(bcolors.BOLD + bcolors.FAIL + "Invalid entry, try again!" + bcolors.ENDC)
+                    continue
+                break
+            except ValueError:
+                print(bcolors.BOLD + bcolors.FAIL + "Invalid entry, try again!" + bcolors.ENDC)
+    return choice
 
 
 # End game check
 def end_game_check():
+    global running
     player_sum = 0
     enemy_sum = 0
-    for player in players:
-        player_sum += player.hp
-    for enemy in enemies:
-        enemy_sum += enemy.hp
+    for x in players:
+        player_sum += x.hp
+    for x in enemies:
+        enemy_sum += x.hp
     if player_sum is 0:
         print(bcolors.OKGREEN + "All players have been defeated. enemies win!" + bcolors.ENDC)
         running = False
@@ -175,41 +193,37 @@ while running:
         enemy.get_stats()
 
     print("\n")
-
-
-
-        # NEED WAY TO CHECK FOR INVALID ENTRY EBFORE ASKING FOR SECOND ENTRY #
     for player in players:
         if player.hp is 0:
             continue
-        player.choose_action()
         while True:
-            try:
-                index = int(input("Choose an action")) - 1
-                break
-            except ValueError:
-                print(bcolors.BOLD + bcolors.FAIL + "Invalid entry, try again!" + bcolors.ENDC)
-        choose_enemy()
-        while True:
-            try:
-                target = int(input("Choose an Enemy")) - 1
-                break
-            except ValueError:
-                print(bcolors.BOLD + bcolors.FAIL + "Invalid entry, try again!" + bcolors.ENDC)
+            action_result = True
+            player.choose_action()
+            while True:
+                try:
+                    index = int(input("Choose an action")) - 1
+                    break
+                except ValueError:
+                    print(bcolors.BOLD + bcolors.FAIL + "Invalid entry, try again!" + bcolors.ENDC)
+                    continue
 
-        action_result = True
+            if index is 0:
+                action_result = attack(player, False)
 
-        if index is 0:
-            action_result = attack(player, target, False)
+            elif index is 1:
+                action_result = magic(player, False)
 
-        elif index is 1:
-            action_result = magic(player, target, False)
+            elif index is 2:
+                action_result = items(player, False)
 
-        elif index is 2:
-            action_result = items(player)
+            else:
+                print(bcolors.BOLD + bcolors.FAIL + "Invalid selection, try again!" + bcolors.ENDC)
+                continue
 
-        if action_result is False:
-            continue
+            if action_result is False:
+                continue
+
+            break
 
     end_game_check()
     if running is False:
@@ -220,12 +234,11 @@ while running:
             continue
         action_result = True
         action = random.randrange(0, 1)
-        target = random.randrange(0, len(players) - 1)
 
         if action is 0:
-            action_result = attack(enemy, target, True)
+            action_result = attack(enemy, True)
         elif action is 1:
-            action_result = magic(enemy, target, True)
+            action_result = magic(enemy, True)
 
         if action_result is False:
             continue
